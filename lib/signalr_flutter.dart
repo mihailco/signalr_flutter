@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 /// Transport method of the signalr connection.
@@ -122,11 +123,18 @@ class SignalR {
   /// Invoke any server method with optional [arguments].
   Future<T?> invokeMethod<T>(String methodName,
       {List<dynamic>? arguments}) async {
+    final filteredArguments = (arguments ?? List.empty()).map((element) {
+      if (element is Map) {
+        return Map.fromEntries(
+            element.entries.where((entry) => entry.value != null));
+      }
+      return element;
+    }).toList();
     try {
       final result = await _channel.invokeMethod<T>(
           "invokeServerMethod", <String, dynamic>{
         'methodName': methodName,
-        'arguments': arguments ?? List.empty()
+        'arguments': filteredArguments ?? List.empty()
       });
       return result;
     } on PlatformException catch (ex) {

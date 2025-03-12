@@ -128,9 +128,19 @@ class SignalRWrapper {
   }
 
   func invokeServerMethod(methodName: String, arguments: [Any]? = nil, result: @escaping FlutterResult) {
+    var processedArguments: Any? = arguments
+    if let dict = arguments as? [String: Any] {
+        var newDict = dict
+        for (key, value) in dict {
+            if value is NSNull {
+                newDict.removeValue(forKey: key)
+            }
+        }
+        processedArguments = newDict
+    }
     do {
       if let hub = self.hub {
-        try hub.invoke(methodName, arguments: arguments, callback: { (res, error) in
+        try hub.invoke(methodName, arguments: processedArguments, callback: { (res, error) in
           if let error = error {
             result(FlutterError(code: "Error", message: String(describing: error), details: nil))
           } else {
